@@ -21,10 +21,13 @@ const ROLE_ORDER = [
 export default function StaffManager() {
   const [roles, setRoles] = useState({});
   const [title, setTitle] = useState("\\\\ GUBBA TAG STAFF //");
+  const [colorA, setColorA] = useState("#8e5cff");
+  const [colorB, setColorB] = useState("#ffffff");
   const [loading, setLoading] = useState(true);
   const [selectedRole, setSelectedRole] = useState("FOUNDERS");
   const [newName, setNewName] = useState("");
   const [message, setMessage] = useState("");
+  const [savingColors, setSavingColors] = useState(false);
 
   const load = async () => {
     try {
@@ -32,6 +35,8 @@ export default function StaffManager() {
       const data = await res.json();
       setRoles(data.roles || {});
       setTitle(data.title || "\\\\ GUBBA TAG STAFF //");
+      if (data.colorA) setColorA(data.colorA);
+      if (data.colorB) setColorB(data.colorB);
     } catch (e) {
       setMessage("Failed to load staff");
     } finally {
@@ -77,13 +82,91 @@ export default function StaffManager() {
     }
   };
 
+  const saveColors = async () => {
+    setSavingColors(true);
+    setMessage("Saving gradient...");
+    const res = await fetch("/api/staff", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ colorA, colorB }),
+    });
+    if (res.ok) {
+      setMessage("Gradient saved! Unity will pick it up in a few seconds.");
+    } else {
+      setMessage("Failed to save gradient");
+    }
+    setSavingColors(false);
+  };
+
   if (loading) return <div style={{ padding: 40 }}>Loading...</div>;
 
   return (
     <div style={{ maxWidth: 700, margin: "40px auto", padding: 20 }}>
       <h1 style={{ textAlign: "center", letterSpacing: 2 }}>{title}</h1>
-      <p style={{ textAlign: "center", color: "#888", marginBottom: 30 }}>
-      </p>
+      <p style={{ textAlign: "center", color: "#888", marginBottom: 30 }}></p>
+
+      {/* Gradient Controls */}
+      <div
+        style={{
+          background: "#1a1a1a",
+          padding: 16,
+          borderRadius: 8,
+          marginBottom: 24,
+        }}
+      >
+        <div style={{ marginBottom: 12, fontWeight: "bold", color: "#ccc" }}>
+          Gradient Colors (live in Unity)
+        </div>
+        <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, color: "#aaa" }}>
+            Color A
+            <input
+              type="color"
+              value={colorA}
+              onChange={(e) => setColorA(e.target.value)}
+              style={{ width: 48, height: 32, border: "none", cursor: "pointer", background: "none" }}
+            />
+            <span style={{ fontFamily: "monospace", fontSize: 13 }}>{colorA}</span>
+          </label>
+
+          <label style={{ display: "flex", alignItems: "center", gap: 8, color: "#aaa" }}>
+            Color B
+            <input
+              type="color"
+              value={colorB}
+              onChange={(e) => setColorB(e.target.value)}
+              style={{ width: 48, height: 32, border: "none", cursor: "pointer", background: "none" }}
+            />
+            <span style={{ fontFamily: "monospace", fontSize: 13 }}>{colorB}</span>
+          </label>
+
+          <button
+            onClick={saveColors}
+            disabled={savingColors}
+            style={{
+              padding: "8px 20px",
+              background: savingColors ? "#555" : "#8b5cf6",
+              color: "#fff",
+              border: "none",
+              borderRadius: 4,
+              fontWeight: "bold",
+              cursor: savingColors ? "not-allowed" : "pointer",
+            }}
+          >
+            {savingColors ? "Saving..." : "Save Gradient"}
+          </button>
+        </div>
+
+        {/* Preview bar */}
+        <div
+          style={{
+            marginTop: 14,
+            height: 10,
+            borderRadius: 5,
+            background: `linear-gradient(90deg, ${colorA}, ${colorB})`,
+          }}
+        />
+      </div>
 
       {/* Add form */}
       <div
